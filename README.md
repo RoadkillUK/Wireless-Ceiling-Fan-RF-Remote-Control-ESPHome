@@ -22,7 +22,5 @@ The receivers data pin is connected to pin GPIO01
 The transmitters data pin is connected to pin GPIO04
 
 ## What we end up with is
-### 3 buttons that will turn on the fan at low, medium and high
-- 1 switch that will turn the fan off and on (this can be set to L,M,H)
+- 3 speed fan with low, medium and high settings
 - 1 button for the Big light (This is a toggle, HA can't know the state of the light)
-

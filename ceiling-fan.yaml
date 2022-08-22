@@ -1,3 +1,7 @@
+# Part credits go to Sparky Dave
+# https://community.home-assistant.io/u/sparkydave/summary
+# https://community.home-assistant.io/t/esp-home-3-speed-fan-conversion/319552/8?
+
 substitutions:
   devicename: ceiling-fan 
   upper_devicename: Fan
@@ -43,73 +47,49 @@ captive_portal:
 
 remote_transmitter:
   pin: GPIO01
+  # RF uses a 100% carrier signal
   carrier_duty_percent: 100%
 
-globals: # Global Variable for fan state
-  - id: fantoggle
-    type: bool
-    restore_value: no
-    initial_value: 'false'
-
-
-switch:
+output:
   - platform: template
-    name: "Ceiling Fan"
-    id: fanswitch
-    icon: mdi:ceiling-fan
-    lambda: |-
-      if (id(fantoggle)) {
-        return true;
-      } else {
-        return false;
-      }
-    turn_on_action:
-      - button.press: $defaultspeed
-    turn_off_action:
-      - button.press: fanoff
+    id: ceiling_fan
+    type: float 
+    write_action:
+      - if:
+          condition:
+            lambda: return ((state == 0));
+          then:
+            # action for off
+            - remote_transmitter.transmit_raw:
+                code: [224, -793, 693, -316, 692, -318, 618, -400, 189, -815, 190, -808, 195, -776, 736, -317, 206, -795, 695, -310, 197, -810, 192, -826, 191, -784, 232, -792, 200, -806, 198, -815, 202, -803, 201, -802, 201, -790, 212, -815, 204, -799, 715, -272, 731, -275, 232, -785, 221, -794, 212, -777, 736, -269, 767, -235, 779, -226, 752, -263, 249, -749, 750, -271, 235]
+                repeat: 5
+      - if:
+          condition:
+            lambda: return ((state > 0) && (state < 0.4));
+          then:
+            # action for speed 1
+            - remote_transmitter.transmit_raw:
+                code: [254, -750, 753, -252, 753, -254, 750, -269, 250, -753, 251, -752, 252, -752, 749, -269, 251, -749, 753, -256, 250, -753, 251, -766, 250, -748, 260, -749, 250, -753, 250, -766, 251, -749, 254, -753, 251, -753, 250, -766, 251, -751, 253, -751, 751, -256, 250, -765, 252, -752, 750, -254, 257, -747, 254, -765, 750, -254, 750, -255, 751, -254, 252, -757, 247]
+                repeat: 5
+      - if:
+          condition:
+            lambda: return ((state > 0.4) && (state < 0.7));
+          then:
+            # action for speed 2
+            - remote_transmitter.transmit_raw:
+                code: [211, -774, 726, -300, 708, -300, 703, -311, 208, -797, 207, -795, 207, -798, 703, -320, 201, -796, 706, -297, 207, -797, 210, -809, 205, -792, 211, -789, 214, -775, 230, -782, 236, -784, 216, -786, 216, -786, 223, -792, 225, -790, 207, -794, 707, -301, 704, -316, 205, -795, 706, -301, 705, -301, 204, -808, 720, -261, 748, -259, 248, -764, 727, -281, 224]
+                repeat: 5
+            
+      - if:
+          condition:
+            lambda: return ((state > 0.7));
+          then:
+            # action for speed 3
+            - remote_transmitter.transmit_raw:
+                code: [243, -761, 741, -264, 741, -265, 740, -279, 240, -763, 241, -762, 241, -762, 740, -280, 238, -764, 739, -267, 239, -764, 239, -777, 239, -764, 241, -762, 241, -763, 240, -769, 247, -763, 241, -762, 241, -763, 241, -775, 740, -266, 239, -764, 240, -763, 739, -280, 239, -760, 745, -260, 247, -757, 755, -262, 251, -750, 749, -261, 243, -761, 241, -768, 237]
+                repeat: 5
 
 button:
-  - platform: template
-    name: ${upper_devicename} Off
-    id: fanoff
-    on_press:
-      - globals.set:
-          id: fantoggle
-          value: 'false'
-      - remote_transmitter.transmit_raw:
-          code: [224, -793, 693, -316, 692, -318, 618, -400, 189, -815, 190, -808, 195, -776, 736, -317, 206, -795, 695, -310, 197, -810, 192, -826, 191, -784, 232, -792, 200, -806, 198, -815, 202, -803, 201, -802, 201, -790, 212, -815, 204, -799, 715, -272, 731, -275, 232, -785, 221, -794, 212, -777, 736, -269, 767, -235, 779, -226, 752, -263, 249, -749, 750, -271, 235]
-          repeat: 5
-
-  - platform: template
-    name: ${upper_devicename} Low
-    id: fanlow
-    on_press:
-      - globals.set:
-          id: fantoggle
-          value: 'true'
-      - remote_transmitter.transmit_raw:
-          code: [254, -750, 753, -252, 753, -254, 750, -269, 250, -753, 251, -752, 252, -752, 749, -269, 251, -749, 753, -256, 250, -753, 251, -766, 250, -748, 260, -749, 250, -753, 250, -766, 251, -749, 254, -753, 251, -753, 250, -766, 251, -751, 253, -751, 751, -256, 250, -765, 252, -752, 750, -254, 257, -747, 254, -765, 750, -254, 750, -255, 751, -254, 252, -757, 247]
-          repeat: 5
-  - platform: template
-    name: ${upper_devicename} Medium
-    id: fanmed
-    on_press:
-      - globals.set:
-          id: fantoggle
-          value: 'true'
-      - remote_transmitter.transmit_raw:
-          code: [211, -774, 726, -300, 708, -300, 703, -311, 208, -797, 207, -795, 207, -798, 703, -320, 201, -796, 706, -297, 207, -797, 210, -809, 205, -792, 211, -789, 214, -775, 230, -782, 236, -784, 216, -786, 216, -786, 223, -792, 225, -790, 207, -794, 707, -301, 704, -316, 205, -795, 706, -301, 705, -301, 204, -808, 720, -261, 748, -259, 248, -764, 727, -281, 224]
-          repeat: 5
-  - platform: template
-    name: ${upper_devicename} High
-    id: fanhi
-    on_press:
-      - globals.set:
-          id: fantoggle
-          value: 'true'
-      - remote_transmitter.transmit_raw:
-          code: [243, -761, 741, -264, 741, -265, 740, -279, 240, -763, 241, -762, 241, -762, 740, -280, 238, -764, 739, -267, 239, -764, 239, -777, 239, -764, 241, -762, 241, -763, 240, -769, 247, -763, 241, -762, 241, -763, 241, -775, 740, -266, 239, -764, 240, -763, 739, -280, 239, -760, 745, -260, 247, -757, 755, -262, 251, -750, 749, -261, 243, -761, 241, -768, 237]
-          repeat: 5
   - platform: template
     name: Big Light
     id: light
@@ -117,3 +97,10 @@ button:
       - remote_transmitter.transmit_raw:
           code: [246, -759, 743, -260, 745, -261, 744, -275, 244, -759, 244, -753, 260, -743, 757, -268, 244, -759, 742, -264, 243, -756, 256, -758, 254, -750, 250, -759, 243, -760, 244, -772, 244, -759, 244, -760, 243, -760, 244, -771, 744, -262, 246, -757, 246, -757, 247, -769, 247, -751, 760, -245, 759, -246, 759, -261, 253, -754, 750, -255, 749, -258, 744, -265, 244]
           repeat: 5
+
+fan:
+  - platform: speed
+    id: ceilingfan
+    output: ceiling_fan
+    name: "Ceiling Fan"
+    speed_count: 3
