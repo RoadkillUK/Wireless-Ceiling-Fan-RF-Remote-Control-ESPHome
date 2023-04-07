@@ -29,7 +29,8 @@ web_server:
 logger:
 
 api:
-  password: !secret api_password
+  encryption:
+    key: !secret api_enc
 
 ota:
   password: !secret ota_password
