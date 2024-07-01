@@ -33,7 +33,8 @@ api:
     key: !secret api_enc
 
 ota:
-  password: !secret ota_password
+  - password: !secret ota_password
+    platform: esphome
 
 captive_portal:
 
